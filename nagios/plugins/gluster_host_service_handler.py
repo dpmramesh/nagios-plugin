@@ -21,11 +21,12 @@
 # 
 
 
-import os
-import sys
 import datetime
-import socket
 import getopt
+import os
+import socket
+import sys
+
 
 STATUS_OK = "OK"
 STATUS_WARNING = "WARNING"
@@ -90,6 +91,20 @@ def check_and_update_host_state_to_up(hostAddr, srvcName):
     if finalState == statusCodes[STATUS_OK]:
         update_host_state(hostAddr, srvcName, statusCodes[STATUS_OK])
 
+def handle_nagios_event(args):
+    # Swicth over the service state values and do the needful
+    if args.status == STATUS_CRITICAL:
+        if args.stateType == SRVC_STATE_TYPE_SOFT:
+            if int(args.attempts) == 3:
+                print "Updating the host status to warning (3rd SOFT critical state)..."
+                update_host_state(args.host, args.service, statusCodes[STATUS_WARNING])
+        elif args.stateType == SRVC_STATE_TYPE_HARD:
+            print "Updating the host status to warning..."
+            update_host_state(args.host, args.service, statusCodes[STATUS_WARNING])
+    elif args.status == STATUS_OK:
+        check_and_update_host_state_to_up(args.host, args.service)
+
+    return 0
 
 # Main method
 if __name__ == "__main__":
